@@ -1,13 +1,13 @@
 Call Detail Record (CDR) Inter-Operator Settlement System
 A C++ Client–Server Socket Programming Project
-Overview
-This project implements a TCP-based Client–Server application in C++ for processing Call Detail Records (CDRs) used in Inter-Operator Settlement (IOS).
-The Server stores CDR files and provides them when requested.
-The Client requests the CDR file, downloads it, and processes:
-• Incoming & outgoing voice calls
-• Incoming (MT) & outgoing (MO) SMS records
-• GPRS data usage (download & upload MB)
-Processed data is stored using STL containers, and subscriber identity is based on MSISDN (max 7 digits). 
+  Overview
+    This project implements a TCP-based Client–Server application in C++ for processing Call Detail Records (CDRs) used in Inter-Operator Settlement (IOS).
+      The Server stores CDR files and provides them when requested.
+        The Client requests the CDR file, downloads it, and processes:
+          • Incoming & outgoing voice calls
+            • Incoming (MT) & outgoing (MO) SMS records
+              • GPRS data usage (download & upload MB)
+                Processed data is stored using STL containers, and subscriber identity is based on MSISDN (max 7 digits). 
   
 Project Structure
 Project/
