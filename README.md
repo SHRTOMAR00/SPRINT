@@ -7,8 +7,8 @@ The Client requests the CDR file, downloads it, and processes:
 • Incoming & outgoing voice calls
 • Incoming (MT) & outgoing (MO) SMS records
 • GPRS data usage (download & upload MB)
-Processed data is stored using STL containers, and subscriber identity is based on MSISDN (max 7 digits).
-⸻
+Processed data is stored using STL containers, and subscriber identity is based on MSISDN (max 7 digits). 
+  
 Project Structure
 Project/
 │
