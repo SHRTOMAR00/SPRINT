@@ -1,0 +1,162 @@
+This is client.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        printf("Provide Valid %s <IP address> <Port>\n", argv[0]);
+        return 1;
+    }
+
+    int status, valread, client_fd;
+    struct sockaddr_in serv_addr;
+    char buffer[1024] = {0};
+    if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printf("\nSocket creation error\n");
+        exit(EXIT_FAILURE);
+    }
+
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(atoi(argv[2]));
+
+    if (inet_pton(AF_INET, argv[1], &serv_addr.sin_addr) <= 0) {
+        printf("\nInvalid address/ Address not supported\n");
+        exit(EXIT_FAILURE);
+    }
+    if ((status = connect(client_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) < 0) {
+        printf("\nConnection Failed\n");
+        exit(EXIT_FAILURE);
+    }
+while (1) {
+        printf("Select an option:\n");
+        printf("1. Sum\n");
+        printf("2. Minus\n");
+        printf("3. Exit\n");
+        int option;
+        scanf("%d", &option);
+        if (option == 3) {
+            // Exit option
+            char message[] = "3";
+            send(client_fd, message, strlen(message), 0);
+            break;
+           }
+        else if (option == 1 || option == 2) {
+            int num1, num2;
+            printf("Enter two numbers: ");
+            scanf("%d %d", &num1, &num2);
+
+            char message[1024]={0};
+            sprintf(message,"%d %d %d",option,num1,num2);
+            send(client_fd, message, strlen(message),0);
+
+            valread=read(client_fd, buffer,1024);
+            printf("Result from server: %s \n", buffer);}
+        else
+        {
+        printf("Invalid option\n ");
+        }
+        }
+        close(client_fd);
+        return 0;
+}
+
+This is server.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        printf("Usage: %s <IP address> <Port>\n", argv[0]);
+        return 1;
+    }
+ int server_fd, new_socket, valread;
+    struct sockaddr_in address;
+    char buffer[1024] = {0};
+
+    memset(&address, 0, sizeof(address));
+    int addrlen = sizeof(address);
+
+    // Creating socket file descriptor
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+    printf("SOCKET CREATED \n");
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = inet_addr(argv[1]);
+    address.sin_port = htons(atoi(argv[2]));
+ 
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (listen(server_fd, 3) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+while (1) {
+        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
+            perror("accept");
+            exit(EXIT_FAILURE);
+        }
+
+        int pid = fork();
+
+        if (pid == 0) {
+            // Child process
+            close(server_fd);  // Close the listening socket in the child
+
+            while (1) {
+                valread = read(new_socket, buffer, 1024);
+                printf("Received: %s\n", buffer);
+                int option,num1,num2; // Convert the option character to an integer
+                sscanf(buffer, "%d %d %d",&option,&num1,&num2);
+
+                if (option == 1) {
+                    // Sum operation
+                    int result = num1 + num2;
+                sprintf(buffer, "%d", result);
+                } else if (option == 2) {
+                    // Minus operation
+                    int result = num1 - num2;
+                    sprintf(buffer, "%d", result);
+                } else if (option == 3) {
+                    // Exit option
+                    break;
+                } else {
+                    sprintf(buffer, "Invalid option");
+                }
+
+                send(new_socket,buffer,strlen(buffer),0);
+
+                for(int i=0;i<buffer[i]!=NULL;i++)
+                {
+                        buffer[i] = "\0";
+                }
+
+            }
+            // Close the connected socket in the child
+            close(new_socket);
+            exit(EXIT_SUCCESS); // Terminate the child process
+            } else if (pid < 0) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+
+        // Parent process continues to accept new connections
+        close(new_socket);  // Close the connected socket in the parent
+    }
+
+    return 0;
+}
